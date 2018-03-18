@@ -1,5 +1,4 @@
-#cd /mnt/c/Users/NetLight/Desktop/pythoshik/2048
-from random import randint
+# cd /mnt/c/Users/NetLight/Desktop/pythoshik/2048
 import funcs
 
 
@@ -24,69 +23,44 @@ field = [
 ]
 
 
-free_cells_list = funcs.find_free_cells(field)
-x1, y1 = funcs.rand_el_from_list(free_cells_list)
-field[y1][x1] = CELL_2
+field = funcs.generate_number_in_free_cell(field, [2, 2, 2, 4])
 
 is_game_end = False
 while not is_game_end:
+    field = funcs.generate_number_in_free_cell(field, [1024, 2, 2, 4])
     funcs.print_info(field)
 
-    curr_move = input('make move: ')
+    curr_move = input('make move: ').lower()
     if curr_move not in WAYS.keys():
         print('Wrong user input.')
         continue
 
     need_to_transpose_field = False
     need_to_reverse_field = False
-    if curr_move in ['w', 's']:
-        print('make transpose')
+    new_field_state = field
+    if WAYS[curr_move] in (UP, DOWN):
         need_to_transpose_field = True
-    if curr_move in ['s', 'd']:
-        print('make reverse')
+    if WAYS[curr_move] in (DOWN, RIGHT):
         need_to_reverse_field = True
 
-    transpose_or_reversed_field = funcs.transpose_and_or_reverse(
-        field,
-        need_to_transpose_field,
-        need_to_reverse_field)
+    if need_to_transpose_field:
+        new_field_state = funcs.transpose(new_field_state)
+    if need_to_reverse_field:
+        new_field_state = funcs.reverse(new_field_state)
 
-    updated_field = list(map(funcs.swipe_and_sum, transpose_or_reversed_field))
+    new_field_state = map(funcs.swipe_and_sum, new_field_state)
 
-    field = funcs.transpose_and_or_reverse(
-        updated_field,
-        need_to_transpose_field,
-        need_to_reverse_field)
+    if need_to_reverse_field:
+        new_field_state = funcs.reverse(new_field_state)
+    if need_to_transpose_field:
+        new_field_state = funcs.transpose(new_field_state)
 
-    is_game_end = any(filter(lambda cols_or_row: 2048 in cols_or_row, field))
+    field = list(map(list, new_field_state))
+    is_game_end = (
+        any(filter(lambda cols_or_row: 2048 in cols_or_row, field)) or
+        not funcs.find_free_cells(field))
 
-
-# открывает программу
-#
-# инициализация:
-#   библиотеки
-#   константы
-#   переменные
-#
-# главный игровой цикл:
-#   вывод на экран
-#   пользовательский ввод
-#   обработка ввода:
-#     определяем направление
-#     сдвигаем числа & суммируем числа по направлению:
-#       только ближайшие
-#   recur
-#
-#
-# завершение
-
-
-
-
-
-
-
-
-
-
-#i spizdil this from github URL
+print('--------------------')
+print('Nice Work!', sep='\n')
+print(*field, sep='\n')
+print('--------------------')
