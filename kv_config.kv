@@ -1,0 +1,25 @@
+#:import utils kivy.utils
+
+
+<Label>:
+    font_size: '100sp' if self.text != '0' else '0sp'
+    font_type: 'Clear Sans'
+    bold: True
+    color: utils.get_color_from_hex('#776e65')
+    space: 5
+    canvas.before:
+        Color:
+            rgb: utils.get_color_from_hex('#eee4da' if self.text != '0' else '#cdc1b4')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<GameFieldWidget>:
+    padding: [15, 15]
+    spacing: 15
+    canvas.before:
+        Color:
+            rgb: utils.get_color_from_hex('#bbada0')
+        Rectangle:
+            pos: self.pos
+            size: self.size

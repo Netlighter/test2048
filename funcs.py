@@ -1,8 +1,35 @@
+# cd /mnt/c/Users/NetLight/Desktop/pythoshik/2048
+# cd /home/netlight/Desktop/projects/py3/test2048
 from random import randint
 import copy
 
 
 NULL = 0
+
+WRONG_USER_INPUT = 'wrong_user_input'
+FINE_STATE = 'fine_state'
+GAME_END = 'game_end'
+
+
+NULL = 0
+CELL_2 = 2
+
+UP = [-1, 0]
+DOWN = [1, 0]
+LEFT = [0, -1]
+RIGHT = [0, 1]
+WAYS = {
+    'w': UP,
+    's': DOWN,
+    'a': LEFT,
+    'd': RIGHT, }
+
+
+def to_one_dim(field):
+    one_dim_field = []
+    for row in field:
+        one_dim_field.extend(row)
+    return one_dim_field
 
 
 def find_free_cells(field):
@@ -57,10 +84,33 @@ def swipe_and_sum(col_or_row):
     return swiped_col_or_row
 
 
-def print_info(field):
-    field = list(map(list, field))
-    print('--------------------')
-    print(*field, sep='\n')
-    print('--------------------')
-    print('use W A S D to move the field')
-    print('--------------------')
+def process_game_step(field, user_input):
+    if user_input not in WAYS.keys():
+        return WRONG_USER_INPUT, field
+
+    need_to_transpose_field = False
+    need_to_reverse_field = False
+    new_field_state = field
+    if WAYS[user_input] in (UP, DOWN):
+        need_to_transpose_field = True
+    if WAYS[user_input] in (DOWN, RIGHT):
+        need_to_reverse_field = True
+
+    if need_to_transpose_field:
+        new_field_state = transpose(new_field_state)
+    if need_to_reverse_field:
+        new_field_state = reverse(new_field_state)
+
+    new_field_state = map(swipe_and_sum, new_field_state)
+
+    if need_to_reverse_field:
+        new_field_state = reverse(new_field_state)
+    if need_to_transpose_field:
+        new_field_state = transpose(new_field_state)
+
+    field = list(map(list, new_field_state))
+    if (any(filter(lambda cols_or_row: 2048 in cols_or_row, field)) or
+            not find_free_cells(field)):
+        return GAME_END, field
+
+    return FINE_STATE, field
