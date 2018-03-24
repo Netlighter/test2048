@@ -6,7 +6,7 @@ import funcs
 from kivy.lang.builder import Builder
 from kivy.config import Config
 
-Builder.load_file('/home/netlight/Desktop/projects/py3/test2048/properties.kv')
+Builder.load_file('/home/netlight/Desktop/projects/py3/test2048/kv_config.kv')
 
 kivy.require('1.0.8')
 
