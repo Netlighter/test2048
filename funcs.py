@@ -7,8 +7,8 @@ import copy
 NULL = 0
 
 WRONG_USER_INPUT = 'wrong_user_input'
-FINE_STATE = 'fine_state'
-GAME_END = 'game_end'
+GAME_CONTINUE = 'fine_state'
+GAME_WON = 'game_won'
 
 
 NULL = 0
@@ -58,10 +58,12 @@ def reverse(some_list):
 def generate_number_in_free_cell(field, numbers_list):
     field_copy = copy.deepcopy(field)
     free_cells_list = find_free_cells(field_copy)
-    number_to_generate = rand_el_from_list(numbers_list)
-    y, x = rand_el_from_list(free_cells_list)
-    field_copy[y][x] = number_to_generate
-    return field_copy
+    if free_cells_list:
+        number_to_generate = rand_el_from_list(numbers_list)
+        y, x = rand_el_from_list(free_cells_list)
+        field_copy[y][x] = number_to_generate
+        return field_copy
+    return field
 
 
 def swipe_and_sum(col_or_row):
@@ -109,8 +111,14 @@ def process_game_step(field, user_input):
         new_field_state = transpose(new_field_state)
 
     field = list(map(list, new_field_state))
-    if (any(filter(lambda cols_or_row: 2048 in cols_or_row, field)) or
-            not find_free_cells(field)):
-        return GAME_END, field
+    if any(filter(lambda cols_or_row: 2048 in cols_or_row, field)):
+        return GAME_WON, field
 
-    return FINE_STATE, field
+    return GAME_CONTINUE, field
+
+
+def check_possibility_to_move(field):
+    for way_str in WAYS.keys():
+        if process_game_step(field, way_str)[1] != field:
+            return True
+    return False

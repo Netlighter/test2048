@@ -26,6 +26,20 @@ class TestStringMethods(unittest.TestCase):
                 [4, 3, 5]]),
             [[0, 0], [1, 0], [1, 2]])
 
-
+    def test_check_possibility_to_move(self):
+        self.assertEqual(
+            funcs.check_possibility_to_move([
+                [2, 4, 8, 16],
+                [4, 2, 16, 8],
+                [2, 4, 8, 16],
+                [4, 2, 16, 8]]),
+            False)
+        self.assertEqual(
+            funcs.check_possibility_to_move([
+                [2, 4, 8, 16],
+                [2, 2, 16, 8],
+                [2, 4, 8, 16],
+                [4, 2, 16, 8]]),
+            True)
 if __name__ == '__main__':
     unittest.main()

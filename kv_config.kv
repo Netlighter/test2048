@@ -1,18 +1,26 @@
+#:kivy 1.0.8
 #:import utils kivy.utils
+#:import COLORS config.CELL_COLORS
+#:import FONTS config.FONTS
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
 
 
-<Label>:
-    font_size: '100sp' if self.text != '0' else '0sp'
-    font_type: 'Clear Sans'
+#:set lte_4_font_color utils.get_color_from_hex('#776e65')
+#:set gt_4_font_color utils.get_color_from_hex('#f9f6f2')
+#:set fallback_cell_color '#f67c5f'
+
+
+<Cell>:
+    font_size: '0sp' if self.text == '0' else FONTS.get(len(self.text), '35sp')
     bold: True
-    color: utils.get_color_from_hex('#776e65')
-    space: 5
+    color: gt_4_font_color if int(self.text) > 4 else lte_4_font_color
     canvas.before:
         Color:
-            rgb: utils.get_color_from_hex('#eee4da' if self.text != '0' else '#cdc1b4')
-        Rectangle:
+            rgb: utils.get_color_from_hex(COLORS.get(self.text, fallback_cell_color))
+        RoundedRectangle:
             pos: self.pos
             size: self.size
+            radius: [10,]
 
 <GameFieldWidget>:
     padding: [15, 15]
