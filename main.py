@@ -1,92 +1,101 @@
-#cd /mnt/c/Users/NetLight/Desktop/pythoshik/2048
-from random import randint
+import os
+
+import kivy
+from kivy.uix.button import Label, Button
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.modalview import ModalView
+from kivy.core.window import Window
+from kivy.lang.builder import Builder
+from kivy.config import Config
+
 import funcs
 
 
-NULL = 0
-CELL_2 = 2
+Builder.load_file(os.path.join('kv_config.kv'))
 
-UP = [-1, 0]
-DOWN = [1, 0]
-LEFT = [0, -1]
-RIGHT = [0, 1]
-WAYS = {
-    'w': UP,
-    's': DOWN,
-    'a': LEFT,
-    'd': RIGHT, }
+kivy.require('1.0.8')
 
-field = [
-    [NULL, NULL, NULL, NULL],
-    [NULL, NULL, NULL, NULL],
-    [NULL, NULL, NULL, NULL],
-    [NULL, NULL, NULL, NULL],
-]
+Config.set('graphics', 'width', '200')
+Config.set('graphics', 'height', '200')
+Config.set('graphics', 'resizable', False)
+Config.write()
+Window.size = (550, 550)
 
 
-free_cells_list = funcs.find_free_cells(field)
-x1, y1 = funcs.rand_el_from_list(free_cells_list)
-field[y1][x1] = CELL_2
-
-is_game_end = False
-while not is_game_end:
-    funcs.print_info(field)
-
-    curr_move = input('make move: ')
-    if curr_move not in WAYS.keys():
-        print('Wrong user input.')
-        continue
-
-    need_to_transpose_field = False
-    need_to_reverse_field = False
-    if curr_move in ['w', 's']:
-        print('make transpose')
-        need_to_transpose_field = True
-    if curr_move in ['s', 'd']:
-        print('make reverse')
-        need_to_reverse_field = True
-
-    transpose_or_reversed_field = funcs.transpose_and_or_reverse(
-        field,
-        need_to_transpose_field,
-        need_to_reverse_field)
-
-    updated_field = list(map(funcs.swipe_and_sum, transpose_or_reversed_field))
-
-    field = funcs.transpose_and_or_reverse(
-        updated_field,
-        need_to_transpose_field,
-        need_to_reverse_field)
-
-    is_game_end = any(filter(lambda cols_or_row: 2048 in cols_or_row, field))
+# Custom class to not override global Label styles in .kv files.
+class Cell(Label):
+    pass
 
 
-# открывает программу
-#
-# инициализация:
-#   библиотеки
-#   константы
-#   переменные
-#
-# главный игровой цикл:
-#   вывод на экран
-#   пользовательский ввод
-#   обработка ввода:
-#     определяем направление
-#     сдвигаем числа & суммируем числа по направлению:
-#       только ближайшие
-#   recur
-#
-#
-# завершение
+class GameFieldWidget(GridLayout):
+    def __init__(self, game_field_matrix, **kwargs):
+        super().__init__(**kwargs)
+        self._keyboard = Window.request_keyboard(
+            self._keyboard_closed, self, 'text')
+        self._keyboard.bind(on_key_up=self._on_keyboard_up)
+
+        self.look_for_game_win_state = True
+
+        self.game_field_matrix = game_field_matrix
+        self.generate_random_number()
+        self.generate_random_number()
+        for label_text in funcs.to_one_dim(self.game_field_matrix):
+            self.add_widget(Cell(text=str(label_text)))
+
+    def generate_random_number(self):
+        self.game_field_matrix = funcs.generate_number_in_free_cell(
+            self.game_field_matrix, [2, 2, 2, 2, 4])
+
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_up=self._on_keyboard_up)
+        self._keyboard = None
+
+    def _on_keyboard_up(self, keyboard, keycode):
+        key_str = keycode[1]
+
+        if not funcs.check_possibility_to_move(self.game_field_matrix):
+            popup = ModalView(
+                size_hint=(None, None),
+                size=(200, 50),
+                background_color=(1, .7, .2, .4))
+            popup.add_widget(Button(
+                text='You LOSE!',
+                font_size='25sp',
+                background_color=(1, .7, .2, 1)))
+            popup.open()
+            keyboard.release()
+
+        state, updated_field = funcs.process_game_step(
+            self.game_field_matrix, key_str)
+        if state != funcs.WRONG_USER_INPUT:
+            self.game_field_matrix = updated_field
+            self.generate_random_number()
+            updated_field = funcs.to_one_dim(self.game_field_matrix)[::-1]
+            for index in range(len(updated_field)):
+                self.children[index].text = str(updated_field[index])
+
+        if self.look_for_game_win_state and state == funcs.GAME_WON:
+            self.look_for_game_win_state = False
+            popup = ModalView(
+                size_hint=(None, None),
+                size=(200, 50),
+                background_color=(1, .7, .2, .4))
+            popup.add_widget(Button(
+                text='You WON!',
+                font_size='25sp',
+                background_color=(1, .7, .2, 1)))
+            popup.open()
+
+        return True
 
 
-
-
-
-
-
-
-
-
-#i spizdil this from github URL
+if __name__ == '__main__':
+    from kivy.base import runTouchApp
+    runTouchApp(GameFieldWidget(
+        game_field_matrix=[
+            [funcs.NULL, funcs.NULL, funcs.NULL, funcs.NULL],
+            [funcs.NULL, funcs.NULL, funcs.NULL, funcs.NULL],
+            [funcs.NULL, funcs.NULL, funcs.NULL, funcs.NULL],
+            [funcs.NULL, funcs.NULL, funcs.NULL, funcs.NULL],
+        ],
+        cols=4))

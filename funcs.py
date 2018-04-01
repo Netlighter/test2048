@@ -1,7 +1,36 @@
+# cd /mnt/c/Users/NetLight/Desktop/pythoshik/2048
+# cd /home/netlight/Desktop/projects/py3/test2048
 from random import randint
+import copy
 
 
 NULL = 0
+
+WRONG_USER_INPUT = 'wrong_user_input'
+GAME_CONTINUE = 'fine_state'
+GAME_WON = 'game_won'
+
+
+NULL = 0
+CELL_2 = 2
+
+UP = [-1, 0]
+DOWN = [1, 0]
+LEFT = [0, -1]
+RIGHT = [0, 1]
+WAYS = {
+    'w': UP,
+    's': DOWN,
+    'a': LEFT,
+    'd': RIGHT, }
+
+
+def to_one_dim(field):
+    one_dim_field = []
+    for row in field:
+        one_dim_field.extend(row)
+    return one_dim_field
+
 
 def find_free_cells(field):
     free_cells_list = []
@@ -19,33 +48,37 @@ def rand_el_from_list(search_list):
 
 
 def transpose(field):
-    # print('transpose')
-    # print(*list(map(list, zip(*field))), sep='\n')
-    return list(map(list, zip(*field)))
+    return map(list, zip(*field))
 
 
 def reverse(some_list):
-    # print('reverse')
-    # print(*list(map(lambda arr: arr[::-1], some_list)), sep='\n')
-    return list(map(lambda arr: arr[::-1], some_list))
+    return map(lambda arr: arr[::-1], some_list)
+
+
+def generate_number_in_free_cell(field, numbers_list):
+    field_copy = copy.deepcopy(field)
+    free_cells_list = find_free_cells(field_copy)
+    if free_cells_list:
+        number_to_generate = rand_el_from_list(numbers_list)
+        y, x = rand_el_from_list(free_cells_list)
+        field_copy[y][x] = number_to_generate
+        return field_copy
+    return field
 
 
 def swipe_and_sum(col_or_row):
     swiped_col_or_row = []
-    col_or_row_iter = iter(col_or_row)
-    curr_cell = next(col_or_row_iter)
-    for next_cell in col_or_row_iter:
-        if next_cell == curr_cell:
-            swiped_col_or_row.append(curr_cell + next_cell)
-            curr_cell = next(col_or_row_iter, NULL)
-        elif curr_cell == NULL:
-            curr_cell = next_cell
+    cells_were_summed = False
+    for number in col_or_row:
+        if number == NULL:
             continue
+        elif (swiped_col_or_row != [] and number == swiped_col_or_row[-1] and
+                not cells_were_summed):
+            swiped_col_or_row[-1] += number
+            cells_were_summed = True
         else:
-            swiped_col_or_row.append(curr_cell)
-            curr_cell = next_cell
-    else:
-        swiped_col_or_row.append(curr_cell)
+            cells_were_summed = False
+            swiped_col_or_row.append(number)
 
     for waifu in range(len(col_or_row) - len(swiped_col_or_row)):
         swiped_col_or_row.append(NULL)
@@ -53,35 +86,39 @@ def swipe_and_sum(col_or_row):
     return swiped_col_or_row
 
 
-def transpose_and_or_reverse(field, transpose_field, reverse_field):
-    print({
-        (True, True): reverse(transpose(field)),
-        (True, False): transpose(field),
-        (False, True): field[::-1],
-        (False, False): field,
-    }.get((transpose_field, reverse_field)), sep='\n')
-    return {
-        (True, True): reverse(transpose(field)),
-        (True, False): transpose(field),
-        (False, True): field[::-1],
-        (False, False): field,
-    }.get((transpose_field, reverse_field))
+def process_game_step(field, user_input):
+    if user_input not in WAYS.keys():
+        return WRONG_USER_INPUT, field
+
+    need_to_transpose_field = False
+    need_to_reverse_field = False
+    new_field_state = field
+    if WAYS[user_input] in (UP, DOWN):
+        need_to_transpose_field = True
+    if WAYS[user_input] in (DOWN, RIGHT):
+        need_to_reverse_field = True
+
+    if need_to_transpose_field:
+        new_field_state = transpose(new_field_state)
+    if need_to_reverse_field:
+        new_field_state = reverse(new_field_state)
+
+    new_field_state = map(swipe_and_sum, new_field_state)
+
+    if need_to_reverse_field:
+        new_field_state = reverse(new_field_state)
+    if need_to_transpose_field:
+        new_field_state = transpose(new_field_state)
+
+    field = list(map(list, new_field_state))
+    if any(filter(lambda cols_or_row: 2048 in cols_or_row, field)):
+        return GAME_WON, field
+
+    return GAME_CONTINUE, field
 
 
-# def transpose_and_reverse(curr_move):
-#     if curr_move in (UP, DOWN):
-#         # Field transpose.
-#         field_cols_or_rows = map(list, zip(*field))
-#     else:
-#         field_cols_or_rows = field
-#
-#     if curr_move in (DOWN, RIGHT):
-#         field_cols_or_rows = map(reversed, field_cols_or_rows)
-
-
-# def detranspose_and_reverse()
-
-
-def print_info(field):
-    print(*field, sep='\n')
-    print('use W A S D to move the field\n')
+def check_possibility_to_move(field):
+    for way_str in WAYS.keys():
+        if process_game_step(field, way_str)[1] != field:
+            return True
+    return False
