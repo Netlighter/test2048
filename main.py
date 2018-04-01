@@ -1,3 +1,5 @@
+import os
+
 import kivy
 from kivy.uix.button import Label, Button
 from kivy.uix.gridlayout import GridLayout
@@ -9,7 +11,7 @@ from kivy.config import Config
 import funcs
 
 
-Builder.load_file('/home/netlight/Desktop/projects/py3/test2048/kv_config.kv')
+Builder.load_file(os.path.join('kv_config.kv'))
 
 kivy.require('1.0.8')
 
@@ -20,7 +22,7 @@ Config.write()
 Window.size = (550, 550)
 
 
-# Custom class to not override global Label styles in .kv fiels.
+# Custom class to not override global Label styles in .kv files.
 class Cell(Label):
     pass
 
